@@ -68,7 +68,19 @@ class TrayImageProcessor:
         # Read the first image file
         first_image_path = os.path.join(self.IMAGE_DIR, image_files[0])
         first_image = cv2.imread(first_image_path)
-        # Do further processing with the first image
+
+        # Check if the image dimensions are correct
+        (height, width, channels)=first_image.shape()
+        if height != self.IMAGE_HEIGHT or width != self.IMAGE_WIDTH or channels != 3:
+            raise Exception("Image size is not correct in size.")
+        
+        # checks if each row of the image contains only one unique pixel value.
+        # If it finds a row where all pixels have the same value,
+        # it raises an exception and stops the program,
+        # indicating that the image is not valid.
+        for i in range(0, self.IMAGE_HEIGHT):
+            if len(set(first_image[i])) == 1:
+                raise Exception("Image is not completely loaded.")
 
         # Update the tray center coordinates
         filenameparts = image_files[0].split('_')
