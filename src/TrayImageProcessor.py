@@ -25,8 +25,12 @@ class TrayImageProcessor:
     LENGTH_TRAY_B = 135 # in mm
     ROTATION_ANGLE = -2 # in degrees
     RATIO_MM2PIX = 3.2 # in pixels per mm
+    # Offset of the camera and the tray in the x and y directions in image //shoud be updated in Pixel
     OFF_SET_CAM_X = 0 # in mm
     OFF_SET_CAM_Y = 5 # in mm
+    # Offset of the tray center in the x and y directions and the position, where the image was taken
+    OFF_SET_TRAY_X = -25 # in mm
+    OFF_SET_TRAY_Y = 61 # in mm
 
     def _rotate_img(self, img, angle):
         angle = - angle
@@ -338,10 +342,10 @@ class TrayImageProcessor:
         # Calculate the real world coordinates of the watering points
         real_world_coordinates = []
         for x_roi, y_roi in watering_points_list:
-            x_img = x_roi - self.DIA_OF_ROI + center_x_img
-            y_img = y_roi - self.DIA_OF_ROI + center_y_img
+            x_img = x_roi - self.DIA_OF_POT*self.RATIO_MM2PIX + center_x_img
+            y_img = y_roi - self.DIA_OF_POT*self.RATIO_MM2PIX + center_y_img
             x_ref, y_ref = self.img2ref(x_img, y_img)
-            real_x = self.TRAY_CENTER_X + x_ref/self.RATIO_MM2PIX
-            real_y = self.TRAY_CENTER_Y + y_ref/self.RATIO_MM2PIX
+            real_x = self.TRAY_CENTER_X + x_ref/self.RATIO_MM2PIX + self.OFF_SET_TRAY_X
+            real_y = self.TRAY_CENTER_Y - y_ref/self.RATIO_MM2PIX + self.OFF_SET_TRAY_Y
             real_world_coordinates.append((int(real_x), int(real_y)))
         return real_world_coordinates

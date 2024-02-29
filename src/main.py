@@ -20,7 +20,7 @@ def main():
         # save the real world coordinates to a csv file
         imgp.save_points_to_csv(real_world_coordinates, filename=str(cnt+1))
     # delete the image from the directory
-    imgp.drop_image(imagename)
+    #imgp.drop_image(imagename)
 
 if __name__ == "__main__":
     main()
