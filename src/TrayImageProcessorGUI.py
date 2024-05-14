@@ -45,22 +45,38 @@ def load_image():
 # constants
 ROTATION_ANGLE = 0.0
 ZOOM_FACTOR = 1.0
-
-# create empty images (all white) to display in the label
-emptyTrayImage = np.ones((480, 640, 3), np.uint8) * 255
-emptyPotImage = np.ones((200, 200, 3), np.uint8) * 255
-#draw a blue circle in the empty tray image
 offSetA = int(90*ZOOM_FACTOR)
 offSetB = int(162*ZOOM_FACTOR)
 radiusPot = int(72*ZOOM_FACTOR)
 radiusROI = int(60*ZOOM_FACTOR)
 
-cv2.circle(emptyTrayImage, (320, 240 - offSetA), radiusPot, (0, 0, 255), 2)
-cv2.circle(emptyTrayImage, (320 + offSetB, 240-offSetA), radiusPot, (0, 0, 255), 2)
-cv2.circle(emptyTrayImage, (320 - offSetB, 240-offSetA), radiusPot, (0, 0, 255), 2)
-cv2.circle(emptyTrayImage, (320, 240 + offSetA), radiusPot, (0, 0, 255), 2)
-cv2.circle(emptyTrayImage, (320 + offSetB, 240 + offSetA), radiusPot, (0, 0, 255), 2)
-cv2.circle(emptyTrayImage, (320 - offSetB, 240 + offSetA), radiusPot, (0, 0, 255), 2)
+# create empty images (all white) to display in the label
+emptyTrayImage = np.ones((480, 640, 3), np.uint8) * 255
+emptyPotImage = np.ones((200, 200, 3), np.uint8) * 255
+#draw a blue circle in the empty tray image
+def rescale():
+    global offSetA
+    global offSetB
+    global radiusPot
+    global radiusROI
+    offSetA = int(90*ZOOM_FACTOR)
+    offSetB = int(162*ZOOM_FACTOR)
+    radiusPot = int(72*ZOOM_FACTOR)
+    radiusROI = int(60*ZOOM_FACTOR)
+
+
+def drawTray(ImageWithoutTray):
+    global offSetA
+    global offSetB
+    global radiusPot
+    ImageWithTray = ImageWithoutTray.copy()
+    cv2.circle(ImageWithTray, (320, 240 - offSetA), radiusPot, (0, 0, 255), 2)
+    cv2.circle(ImageWithTray, (320 + offSetB, 240-offSetA), radiusPot, (0, 0, 255), 2)
+    cv2.circle(ImageWithTray, (320 - offSetB, 240-offSetA), radiusPot, (0, 0, 255), 2)
+    cv2.circle(ImageWithTray, (320, 240 + offSetA), radiusPot, (0, 0, 255), 2)
+    cv2.circle(ImageWithTray, (320 + offSetB, 240 + offSetA), radiusPot, (0, 0, 255), 2)
+    cv2.circle(ImageWithTray, (320 - offSetB, 240 + offSetA), radiusPot, (0, 0, 255), 2)
+    return ImageWithTray
 
 
 
@@ -128,7 +144,7 @@ frm_B = tk.Frame(window)
 
 lbl_trayImage = tk.Label(frm_B)
 #display the empty image
-image_display = Image.fromarray(emptyTrayImage)
+image_display = Image.fromarray(drawTray(emptyTrayImage))
 image_display = ImageTk.PhotoImage(image_display)
 lbl_trayImage.config(image=image_display)
 
