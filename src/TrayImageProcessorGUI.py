@@ -42,6 +42,9 @@ def load_image():
     image = cv2.imread(image_path)
     # convert the image to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # change the image to landscape mode
+    if image.shape[0] > image.shape[1]:
+        image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
     # resize the image to 1280x960
     image = cv2.resize(image, (1280, 960))
     IMAGE = image
@@ -254,13 +257,7 @@ def analyze_image():
     #cv2.imshow("Control Image", image)
     # apply the threshold
     channelA = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)[:, :, 1] #all row, col, 2.channel
-    #cv2.imshow("Channel A", channelA)
-    #_, channelA = cv2.threshold(channelA, channelA_min, channelA_max, cv2.THRESH_BINARY)
-    #channelA = cv2.bitwise_not(channelA)
     channelA = cv2.inRange(channelA, channelA_min, channelA_max)
-    cv2.imshow("Channel A", channelA)
-    #
-
     channelH = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)[:, :, 0]
     channelH = cv2.inRange(channelH, channelH_min, channelH_max)
     channelV = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)[:, :, 2]
@@ -278,7 +275,8 @@ def analyze_image():
     image = cv2.dilate(image, kernel, iterations=3)
     # convert the image to RGB
     image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    rotated_image = rotate_image(image)
+    IMAGE = image
+    rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
     display_pot_images(rotated_image)
 
@@ -559,7 +557,7 @@ cbnt_channelA.select()
 scl_channelA_min = tk.Scale(frm_D, variable=sclA_value_min, from_=0, to=255, orient=tk.HORIZONTAL, length=200)
 scl_channelA_min.set(0)
 scl_channelA_max = tk.Scale(frm_D, variable=sclA_value_max, from_=0, to=255, orient=tk.HORIZONTAL, length=200)
-scl_channelA_max.set(30)
+scl_channelA_max.set(120)
 
 lbl_channelA_min = tk.Label(frm_D, text="Min(default: 0)")
 lbl_channelA_max = tk.Label(frm_D, text="Max(default: 30)")
@@ -586,9 +584,9 @@ cbnt_channelH = tk.Checkbutton(frm_E, text="use Channel H",
 cbnt_channelH.select()
 
 scl_channelH_min = tk.Scale(frm_E, variable=sclH_value_min, from_=0, to=255, orient=tk.HORIZONTAL, length=200)
-scl_channelH_min.set(20)
+scl_channelH_min.set(30)
 scl_channelH_max = tk.Scale(frm_E, variable=sclH_value_max ,from_=0, to=255, orient=tk.HORIZONTAL, length=200)
-scl_channelH_max.set(40)
+scl_channelH_max.set(60)
 
 
 lbl_channelH_min = tk.Label(frm_E, text="Min(default: 20)")
