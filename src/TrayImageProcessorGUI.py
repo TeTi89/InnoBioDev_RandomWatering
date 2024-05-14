@@ -11,6 +11,7 @@ import numpy as np
 '''
 # create a cv2 globel variable to store the image
 IMAGE = np.ones((1280, 960, 3), np.uint8) * 255
+IMAGE_MASK = np.ones((1280, 960, 3), np.uint8) * 255
 IMAGE_POT_1 = np.ones((200, 200, 3), np.uint8) * 255
 IMAGE_POT_2 = np.ones((200, 200, 3), np.uint8) * 255
 IMAGE_POT_3 = np.ones((200, 200, 3), np.uint8) * 255
@@ -33,6 +34,7 @@ def open_file():
 
 def load_image():
     global IMAGE
+    global IMAGE_MASK
     image_path = ent_path.get()
     if not os.path.exists(image_path):
         warnings.warn(f"Image path {image_path} does not exist.")
@@ -48,6 +50,7 @@ def load_image():
     # resize the image to 1280x960
     image = cv2.resize(image, (1280, 960))
     IMAGE = image
+    IMAGE_MASK = IMAGE.copy()
 
 def display_image(image):
     # make a copy of the image to display
@@ -119,14 +122,14 @@ def rotate_image(image):
 
 def rotate_cw():
     global ROTATION_ANGLE
-    ROTATION_ANGLE += 1
+    ROTATION_ANGLE -= 1
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
     display_pot_images(rotated_image)
 
 def rotate_ccw():
     global ROTATION_ANGLE
-    ROTATION_ANGLE -= 1
+    ROTATION_ANGLE += 1
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
     display_pot_images(rotated_image)
@@ -182,7 +185,7 @@ def move_down():
     display_pot_images(rotated_image)
 
 def switch_display():
-    rotated_image = rotate_image(IMAGE)
+    rotated_image = rotate_image(IMAGE_MASK)
     display_pot_images(rotated_image)
 
 def check_range(channel):
@@ -217,6 +220,7 @@ def analyze_image():
         return
     
     global IMAGE
+    global IMAGE_MASK
     global IMAGE_POT_1
     global IMAGE_POT_2
     global IMAGE_POT_3
@@ -250,7 +254,7 @@ def analyze_image():
     # get the kernel size
     kernel_size = kernelSize.get()
     # apply the filters
-    image = IMAGE.copy()
+    image = IMAGE_MASK.copy()
     # apply median blur
     #image = cv2.medianBlur(image, kernel_size)
     # plot a contrl image in a new window
@@ -275,10 +279,11 @@ def analyze_image():
     image = cv2.dilate(image, kernel, iterations=3)
     # convert the image to RGB
     image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    IMAGE = image
+    IMAGE_MASK = image.copy()
     rotated_image = rotate_image(IMAGE)
+    rotated_image_mask = rotate_image(IMAGE_MASK)
     display_image(rotated_image)
-    display_pot_images(rotated_image)
+    display_pot_images(rotated_image_mask)
 
 
 # constants
