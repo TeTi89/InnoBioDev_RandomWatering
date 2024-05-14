@@ -7,9 +7,18 @@ import cv2
 import numpy as np
 
 '''
-%%%%%%%%% FUNCTIONS %%%%%%%%%
+%%%%%%%%% CONSTANTS %%%%%%%%%
 '''
-# create a cv2 globel variable to store the image
+ROTATION_ANGLE = 0
+ZOOM_FACTOR = 1.0
+offSetA = int(120*ZOOM_FACTOR)
+offSetB = int(216*ZOOM_FACTOR)
+radiusPot = int(96*ZOOM_FACTOR)
+radiusROI = int(80*ZOOM_FACTOR)
+offSetX = 0
+offSetY = 0
+centerTray = [320, 240]
+
 IMAGE = np.ones((1280, 960, 3), np.uint8) * 255
 IMAGE_MASK = np.ones((1280, 960, 3), np.uint8) * 255
 IMAGE_POT_1 = np.ones((200, 200, 3), np.uint8) * 255
@@ -19,7 +28,9 @@ IMAGE_POT_4 = np.ones((200, 200, 3), np.uint8) * 255
 IMAGE_POT_5 = np.ones((200, 200, 3), np.uint8) * 255
 IMAGE_POT_6 = np.ones((200, 200, 3), np.uint8) * 255
 
-
+'''
+%%%%%%%%% FUNCTIONS %%%%%%%%%
+'''
 def open_file():
     file_path = tk.filedialog.askopenfilename(title="Open Image File")
     # check if the file is a valid image file
@@ -136,21 +147,27 @@ def rotate_ccw():
 
 def zoom_in():
     global ZOOM_FACTOR
-    ZOOM_FACTOR -= 0.1
+    global IMAGE
+    global IMAGE_MASK
+    ZOOM_FACTOR -= 0.05
     if ZOOM_FACTOR < 0.5:
         ZOOM_FACTOR = 0.5
     rescale()
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
-    display_pot_images(rotated_image)
+    rotated_image_mask = rotate_image(IMAGE_MASK)
+    display_pot_images(rotated_image_mask)
 
 def zoom_out():
     global ZOOM_FACTOR
-    ZOOM_FACTOR += 0.1
+    global IMAGE
+    global IMAGE_MASK
+    ZOOM_FACTOR += 0.05
     rescale()
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
-    display_pot_images(rotated_image)
+    rotated_image_mask = rotate_image(IMAGE_MASK)
+    display_pot_images(rotated_image_mask)
 
 def move_left():
     global offSetX
@@ -254,7 +271,7 @@ def analyze_image():
     # get the kernel size
     kernel_size = kernelSize.get()
     # apply the filters
-    image = IMAGE_MASK.copy()
+    image = IMAGE.copy()
     # apply median blur
     #image = cv2.medianBlur(image, kernel_size)
     # plot a contrl image in a new window
@@ -285,22 +302,6 @@ def analyze_image():
     display_image(rotated_image)
     display_pot_images(rotated_image_mask)
 
-
-# constants
-ROTATION_ANGLE = 0
-ZOOM_FACTOR = 1.0
-offSetA = int(120*ZOOM_FACTOR)
-offSetB = int(216*ZOOM_FACTOR)
-radiusPot = int(96*ZOOM_FACTOR)
-radiusROI = int(80*ZOOM_FACTOR)
-offSetX = 0
-offSetY = 0
-centerTray = [320, 240]
-
-# create empty images (all white) to display in the label
-emptyTrayImage = np.ones((480, 640, 3), np.uint8) * 255
-emptyPotImage = np.ones((200, 200, 3), np.uint8) * 255
-#draw a blue circle in the empty tray image
 def rescale():
     global offSetA
     global offSetB
@@ -312,18 +313,18 @@ def rescale():
     offSetB = int(162*ZOOM_FACTOR)
     radiusPot = int(72*ZOOM_FACTOR)
     radiusROI = int(60*ZOOM_FACTOR)
-    # check boundries
+    #check boundries
     if centerTray[0] + radiusPot + offSetB > 640:
-        ZOOM_FACTOR -= 0.1
+        ZOOM_FACTOR -= 0.05
         rescale()
     if centerTray[0] - radiusPot - offSetB < 0:
-        ZOOM_FACTOR -= 0.1
+        ZOOM_FACTOR -= 0.05
         rescale()
     if centerTray[1] + radiusPot + offSetA > 480:
-        ZOOM_FACTOR -= 0.1
+        ZOOM_FACTOR -= 0.05
         rescale()
     if centerTray[1] - radiusPot - offSetA < 0:
-        ZOOM_FACTOR -= 0.1
+        ZOOM_FACTOR -= 0.05
         rescale()
 
 def reposition():
@@ -392,7 +393,7 @@ def split_pots(image, centerPot, scale=2):
     y2 = (y + radiusPot) * scale
     potImage = image[y1:y2, x1:x2]
     mask = np.zeros_like(potImage)
-    maskRadius = int(radiusROI*scale)
+    maskRadius = radiusROI*scale
     maskCenter = (potImage.shape[1]//2, potImage.shape[0]//2)
     cv2.circle(mask, maskCenter, maskRadius, (255, 255, 255), -1)
     roiImage = cv2.bitwise_and(potImage, mask)
@@ -447,7 +448,7 @@ text -> txt
 frm_A = tk.Frame(window)
 
 ent_path = tk.Entry(frm_A)
-ent_path.insert(tk.END, "Copy the image file path here")
+ent_path.insert(tk.END, "Enter the image file path here")
 
 btn_loadImage = tk.Button(frm_A, width=10, text="load", command=load_and_display_image)
 btn_openFile = tk.Button(frm_A, width=10, text="browse", command=open_file)
@@ -464,6 +465,8 @@ frm_B = tk.Frame(window)
 
 lbl_trayImage = tk.Label(frm_B)
 #display the empty image
+# create empty images (all white) to display in the label
+emptyTrayImage = np.ones((480, 640, 3), np.uint8) * 255
 image_display = Image.fromarray(drawTray(emptyTrayImage))
 image_display = ImageTk.PhotoImage(image_display)
 lbl_trayImage.config(image=image_display)
@@ -498,6 +501,7 @@ lbl_potImage2 = tk.Label(frm_C1)
 lbl_potImage3 = tk.Label(frm_C1)
 
 #display the empty image
+emptyPotImage = np.ones((200, 200, 3), np.uint8) * 255
 imagePot_display = Image.fromarray(emptyPotImage)
 imagePot_display = ImageTk.PhotoImage(imagePot_display)
 
