@@ -569,7 +569,7 @@ scl_channelA_max = tk.Scale(frm_D, variable=sclA_value_max, from_=0, to=255, ori
 scl_channelA_max.set(120)
 
 lbl_channelA_min = tk.Label(frm_D, text="Min(default: 0)")
-lbl_channelA_max = tk.Label(frm_D, text="Max(default: 30)")
+lbl_channelA_max = tk.Label(frm_D, text="Max(default: 120)")
 
 cbnt_channelA.pack(side=tk.LEFT)
 lbl_channelA_min.pack(side=tk.LEFT, after=cbnt_channelA)
@@ -598,8 +598,8 @@ scl_channelH_max = tk.Scale(frm_E, variable=sclH_value_max ,from_=0, to=255, ori
 scl_channelH_max.set(60)
 
 
-lbl_channelH_min = tk.Label(frm_E, text="Min(default: 20)")
-lbl_channelH_max = tk.Label(frm_E, text="Max(default: 40)")
+lbl_channelH_min = tk.Label(frm_E, text="Min(default: 30)")
+lbl_channelH_max = tk.Label(frm_E, text="Max(default: 60)")
 
 cbnt_channelH.pack(side=tk.LEFT)
 lbl_channelH_min.pack(side=tk.LEFT, after=cbnt_channelH)
