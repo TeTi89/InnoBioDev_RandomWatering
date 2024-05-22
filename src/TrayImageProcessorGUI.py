@@ -18,6 +18,7 @@ radiusROI = int(80*ZOOM_FACTOR)
 offSetX = 0
 offSetY = 0
 centerTray = [320, 240]
+IfLoad = False
 
 IMAGE = np.ones((1280, 960, 3), np.uint8) * 255
 IMAGE_MASK = np.ones((1280, 960, 3), np.uint8) * 255
@@ -46,6 +47,7 @@ def open_file():
 def load_image():
     global IMAGE
     global IMAGE_MASK
+    global IfLoad
     image_path = ent_path.get()
     if not os.path.exists(image_path):
         warnings.warn(f"Image path {image_path} does not exist.")
@@ -62,6 +64,7 @@ def load_image():
     image = cv2.resize(image, (1280, 960))
     IMAGE = image
     IMAGE_MASK = IMAGE.copy()
+    IfLoad = True
 
 def display_image(image):
     # make a copy of the image to display
@@ -132,6 +135,8 @@ def rotate_image(image):
     return rotate_image
 
 def rotate_cw():
+    if not IfLoad:
+        return
     global ROTATION_ANGLE
     ROTATION_ANGLE -= 1
     rotated_image = rotate_image(IMAGE)
@@ -139,6 +144,8 @@ def rotate_cw():
     display_pot_images(rotated_image)
 
 def rotate_ccw():
+    if not IfLoad:
+        return
     global ROTATION_ANGLE
     ROTATION_ANGLE += 1
     rotated_image = rotate_image(IMAGE)
@@ -146,6 +153,8 @@ def rotate_ccw():
     display_pot_images(rotated_image)
 
 def zoom_in():
+    if not IfLoad:
+        return
     global ZOOM_FACTOR
     global IMAGE
     global IMAGE_MASK
@@ -159,6 +168,8 @@ def zoom_in():
     display_pot_images(rotated_image_mask)
 
 def zoom_out():
+    if not IfLoad:
+        return
     global ZOOM_FACTOR
     global IMAGE
     global IMAGE_MASK
@@ -170,6 +181,8 @@ def zoom_out():
     display_pot_images(rotated_image_mask)
 
 def move_left():
+    if not IfLoad:
+        return
     global offSetX
     offSetX -= 2
     reposition()
@@ -178,6 +191,8 @@ def move_left():
     display_pot_images(rotated_image)
 
 def move_right():
+    if not IfLoad:
+        return
     global offSetX
     offSetX += 2
     reposition()
@@ -186,6 +201,8 @@ def move_right():
     display_pot_images(rotated_image)
 
 def move_up():
+    if not IfLoad:
+        return
     global offSetY
     offSetY -= 2
     reposition()
@@ -194,6 +211,8 @@ def move_up():
     display_pot_images(rotated_image)
 
 def move_down():
+    if not IfLoad:
+        return
     global offSetY
     offSetY += 2
     reposition()
@@ -202,6 +221,8 @@ def move_down():
     display_pot_images(rotated_image)
 
 def switch_display():
+    if not IfLoad:
+        return
     rotated_image = rotate_image(IMAGE_MASK)
     display_pot_images(rotated_image)
 
@@ -212,7 +233,7 @@ def check_range(channel):
         channelA_max = sclA_value_max.get()
         if channelA_min >= channelA_max:
             warnings.warn("Invalid channel A range.")
-            messagebox.showwarning("Invalid Channel A Range", "Invalid channel A range.")
+            messagebox.showwarning("Invalid Channel A Range", "Invalid channel A range: Min >= Max!")
             return False
     if channel == "H" or channel == "ALL":
         # check the channel H range
@@ -220,7 +241,7 @@ def check_range(channel):
         channelH_max = sclH_value_max.get()
         if channelH_min >= channelH_max:
             warnings.warn("Invalid channel H range.")
-            messagebox.showwarning("Invalid Channel H Range", "Invalid channel H range.")
+            messagebox.showwarning("Invalid Channel H Range", "Invalid channel H range: Min >= Max!")
             return False
     if channel == "V" or channel == "ALL":
         # check the channel V range
@@ -228,11 +249,13 @@ def check_range(channel):
         channelV_max = sclV_value_max.get()
         if channelV_min >= channelV_max:
             warnings.warn("Invalid channel V range.")
-            messagebox.showwarning("Invalid Channel V Range", "Invalid channel V range.")
+            messagebox.showwarning("Invalid Channel V Range", "Invalid channel V range: Min >= Max!")
             return False
     return True
 
 def analyze_image():
+    if not IfLoad:
+        return
     if not check_range("ALL"):
         return
     
@@ -250,16 +273,16 @@ def analyze_image():
         channelA_min = sclA_value_min.get()
         channelA_max = sclA_value_max.get()
     else:
-        channelA_min = 0
-        channelA_max = 255
+        channelA_min = 256
+        channelA_max = 256
     # get the channel H parameters
     use_channelH = checkbntH_value.get()
     if use_channelH==1:
         channelH_min = sclH_value_min.get()
         channelH_max = sclH_value_max.get()
     else:
-        channelH_min = 0
-        channelH_max = 255
+        channelH_min = 256
+        channelH_max = 256
     # get the channel V parameters
     use_channelV = checkbntV_value.get()
     if use_channelV==1:
@@ -568,6 +591,10 @@ scl_channelA_min.set(0)
 scl_channelA_max = tk.Scale(frm_D, variable=sclA_value_max, from_=0, to=255, orient=tk.HORIZONTAL, length=200)
 scl_channelA_max.set(120)
 
+scl_channelA_min.bind("<ButtonRelease-1>", lambda event: check_range("A"))
+scl_channelA_max.bind("<ButtonRelease-1>", lambda event: check_range("A"))
+
+
 lbl_channelA_min = tk.Label(frm_D, text="Min(default: 0)")
 lbl_channelA_max = tk.Label(frm_D, text="Max(default: 30)")
 
@@ -596,6 +623,9 @@ scl_channelH_min = tk.Scale(frm_E, variable=sclH_value_min, from_=0, to=255, ori
 scl_channelH_min.set(30)
 scl_channelH_max = tk.Scale(frm_E, variable=sclH_value_max ,from_=0, to=255, orient=tk.HORIZONTAL, length=200)
 scl_channelH_max.set(60)
+
+scl_channelH_min.bind("<ButtonRelease-1>", lambda event: check_range("H"))
+scl_channelH_max.bind("<ButtonRelease-1>", lambda event: check_range("H"))
 
 
 lbl_channelH_min = tk.Label(frm_E, text="Min(default: 20)")
@@ -628,6 +658,8 @@ scl_channelV_min.set(50)
 scl_channelV_max = tk.Scale(frm_F, variable=sclV_value_max ,from_=0, to=255, orient=tk.HORIZONTAL, length=200)
 scl_channelV_max.set(250)
 
+scl_channelV_min.bind("<ButtonRelease-1>", lambda event: check_range("H"))
+scl_channelV_max.bind("<ButtonRelease-1>", lambda event: check_range("H"))
 
 lbl_channelV_min = tk.Label(frm_F, text="Min(default: 50)")
 lbl_channelV_max = tk.Label(frm_F, text="Max(default: 250)")
