@@ -19,6 +19,7 @@ offSetX = 0
 offSetY = 0
 centerTray = [320, 240]
 IfLoad = False
+textPar = f"Rotation Angle:\n- not calculated\nZoom Factor:\n- not calculated\nOffset X:\n- not calculated\nOffset Y:\n- not calculated"
 
 IMAGE = np.ones((1280, 960, 3), np.uint8) * 255
 IMAGE_MASK = np.ones((1280, 960, 3), np.uint8) * 255
@@ -125,6 +126,7 @@ def load_and_display_image():
     load_image()
     display_image(IMAGE)
     display_pot_images(IMAGE)
+    update_parameters()
 
 def rotate_image(image):
     global ROTATION_ANGLE
@@ -142,6 +144,7 @@ def rotate_cw():
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
     display_pot_images(rotated_image)
+    update_parameters()
 
 def rotate_ccw():
     if not IfLoad:
@@ -151,6 +154,7 @@ def rotate_ccw():
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
     display_pot_images(rotated_image)
+    update_parameters()
 
 def zoom_in():
     if not IfLoad:
@@ -164,8 +168,10 @@ def zoom_in():
     rescale()
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
-    rotated_image_mask = rotate_image(IMAGE_MASK)
-    display_pot_images(rotated_image_mask)
+    #rotated_image_mask = rotate_image(IMAGE_MASK)
+    #display_pot_images(rotated_image_mask)
+    display_pot_images(rotated_image)
+    update_parameters()
 
 def zoom_out():
     if not IfLoad:
@@ -177,48 +183,72 @@ def zoom_out():
     rescale()
     rotated_image = rotate_image(IMAGE)
     display_image(rotated_image)
-    rotated_image_mask = rotate_image(IMAGE_MASK)
-    display_pot_images(rotated_image_mask)
+    #rotated_image_mask = rotate_image(IMAGE_MASK)
+    #display_pot_images(rotated_image_mask)
+    display_pot_images(rotated_image)
+    update_parameters()
+
+def update_parameters():
+    global textPar
+    textPar = (
+    f"Rotation Angle:\n{ROTATION_ANGLE} Grad\n"
+    f"Zoom Factor:\n{ZOOM_FACTOR*1.6:.2f}pix/mm\n"
+    f"Offset X:\n{ZOOM_FACTOR*1.6*offSetX:.0f}mm\n"
+    f"Offset Y:\n{ZOOM_FACTOR*1.6*offSetY:.0f}mm"
+    )
+    msg_par.config(text=textPar)
 
 def move_left():
     if not IfLoad:
         return
     global offSetX
     offSetX -= 2
-    reposition()
-    rotated_image = rotate_image(IMAGE)
-    display_image(rotated_image)
-    display_pot_images(rotated_image)
+    if reposition():
+        rotated_image = rotate_image(IMAGE)
+        display_image(rotated_image)
+        display_pot_images(rotated_image)
+    else:
+        offSetX += 2
+    update_parameters()
 
 def move_right():
     if not IfLoad:
         return
     global offSetX
     offSetX += 2
-    reposition()
-    rotated_image = rotate_image(IMAGE)
-    display_image(rotated_image)
-    display_pot_images(rotated_image)
+    if reposition():
+        rotated_image = rotate_image(IMAGE)
+        display_image(rotated_image)
+        display_pot_images(rotated_image)
+    else:
+        offSetX -= 2
+    update_parameters()
 
 def move_up():
     if not IfLoad:
         return
     global offSetY
     offSetY -= 2
-    reposition()
-    rotated_image = rotate_image(IMAGE)
-    display_image(rotated_image)
-    display_pot_images(rotated_image)
+    if reposition():
+        rotated_image = rotate_image(IMAGE)
+        display_image(rotated_image)
+        display_pot_images(rotated_image)
+    else:
+        offSetY += 2
+    update_parameters()
 
 def move_down():
     if not IfLoad:
         return
     global offSetY
     offSetY += 2
-    reposition()
-    rotated_image = rotate_image(IMAGE)
-    display_image(rotated_image)
-    display_pot_images(rotated_image)
+    if reposition():
+        rotated_image = rotate_image(IMAGE)
+        display_image(rotated_image)
+        display_pot_images(rotated_image)
+    else:
+        offSetY -= 2
+    update_parameters()
 
 def switch_display():
     if not IfLoad:
@@ -291,6 +321,12 @@ def analyze_image():
     else:
         channelV_min = 0
         channelV_max = 255
+    
+    if use_channelA == 0 and use_channelH == 0 and use_channelV == 0:
+        warnings.warn("No channel selected.")
+        messagebox.showwarning("No channel selected", "Use at least one channel!")
+        return
+    
     # get the kernel size
     kernel_size = kernelSize.get()
     # apply the filters
@@ -311,8 +347,11 @@ def analyze_image():
     channelA = cv2.erode(channelA, kernel, iterations=1)
     channelH = cv2.erode(channelH, kernel, iterations=1)
     # combine the channels
-    image = cv2.bitwise_or(channelA, channelH)
-    image = cv2.bitwise_and(image, channelV)
+    if use_channelA == 1 or use_channelH == 1:
+        image = cv2.bitwise_or(channelA, channelH)
+        image = cv2.bitwise_and(image, channelV)
+    if use_channelA == 0 and use_channelH == 0 and use_channelV == 1:
+        image = channelV
     # apply closing
     image = cv2.dilate(image, kernel, iterations=2)
     image = cv2.erode(image, kernel, iterations=3)
@@ -332,10 +371,10 @@ def rescale():
     global radiusROI
     global centerTray
     global ZOOM_FACTOR
-    offSetA = int(90*ZOOM_FACTOR)
-    offSetB = int(162*ZOOM_FACTOR)
-    radiusPot = int(72*ZOOM_FACTOR)
-    radiusROI = int(60*ZOOM_FACTOR)
+    offSetA = int(120*ZOOM_FACTOR)
+    offSetB = int(216*ZOOM_FACTOR)
+    radiusPot = int(96*ZOOM_FACTOR)
+    radiusROI = int(80*ZOOM_FACTOR)
     #check boundries
     if centerTray[0] + radiusPot + offSetB > 640:
         ZOOM_FACTOR -= 0.05
@@ -359,13 +398,17 @@ def reposition():
     # check upper boundries
     if centerTray[0] + radiusPot + offSetB > 640:
         centerTray[0] = 640 - radiusPot - offSetB
+        return False
     if centerTray[0] - radiusPot - offSetB < 0:
         centerTray[0] = 0 + radiusPot + offSetB
+        return False
     if centerTray[1] + radiusPot + offSetA > 480:
         centerTray[1] = 480 - radiusPot - offSetA
+        return False
     if centerTray[1] - radiusPot - offSetA < 0:
         centerTray[1] = 0 + radiusPot + offSetA
-
+        return False
+    return True
 
 def drawTray(ImageWithoutTray):
     global offSetA
@@ -442,7 +485,7 @@ Layout:
 
 
 +-----------------------------------+
-frame_A: file path
+##frame_A: file path##
 | entry | button | button |
 -------------------------------------
 frame_B: tray image
@@ -451,8 +494,7 @@ label(tray image)
 | button | button | button | button | button | button | button | button |
 -------------------------------------
 frame_C: pot images
-| image | image | image |
-| radio button |
+| image | image | image | radio button |
 -------------------------------------
 frame_D: parameters
 
@@ -480,13 +522,13 @@ ent_path.pack(side=tk.LEFT, fill="x", expand=True)
 btn_loadImage.pack(side=tk.RIGHT)
 btn_openFile.pack(side=tk.RIGHT, after=btn_loadImage)
 
-frm_A.pack(side=tk.TOP, fill="x")
+frm_A.pack(side=tk.TOP, fill="x",expand=True)
 
 # frame B
 
-frm_B = tk.Frame(window)
+frm_B1 = tk.Frame(window)
 
-lbl_trayImage = tk.Label(frm_B)
+lbl_trayImage = tk.Label(frm_B1)
 #display the empty image
 # create empty images (all white) to display in the label
 emptyTrayImage = np.ones((480, 640, 3), np.uint8) * 255
@@ -494,16 +536,29 @@ image_display = Image.fromarray(drawTray(emptyTrayImage))
 image_display = ImageTk.PhotoImage(image_display)
 lbl_trayImage.config(image=image_display)
 
-btn_rotateCW = tk.Button(frm_B, width=10, text="Rotate CW", command=rotate_cw)
-btn_rotateCCW = tk.Button(frm_B, width=10, text="Rotate CCW", command=rotate_ccw)
-btn_zoomIn = tk.Button(frm_B, width=10, text="Zoom In", command=zoom_in)
-btn_zoomOut = tk.Button(frm_B, width=10, text="Zoom Out", command=zoom_out)
-btn_moveLeft = tk.Button(frm_B, width=10, text="Move Left", command=move_left)
-btn_moveRight = tk.Button(frm_B, width=10, text="Move Right", command=move_right)
-btn_moveUp = tk.Button(frm_B, width=10, text="Move Up", command=move_up)
-btn_moveDown = tk.Button(frm_B, width=10, text="Move Down", command=move_down)
+lbl_trayImage.pack(side=tk.LEFT)
 
-lbl_trayImage.pack(side=tk.TOP)
+msg_par = tk.Message(frm_B1, text = textPar)
+msg_par.pack(side=tk.LEFT)
+
+frm_B1.pack(side=tk.TOP, fill="x", expand=True)
+
+
+
+frm_B2 = tk.Frame(window)
+
+
+
+btn_rotateCW = tk.Button(frm_B2, width=10, text="Rotate CW", command=rotate_cw)
+btn_rotateCCW = tk.Button(frm_B2, width=10, text="Rotate CCW", command=rotate_ccw)
+btn_zoomIn = tk.Button(frm_B2, width=10, text="Zoom In", command=zoom_in)
+btn_zoomOut = tk.Button(frm_B2, width=10, text="Zoom Out", command=zoom_out)
+btn_moveLeft = tk.Button(frm_B2, width=10, text="Move Left", command=move_left)
+btn_moveRight = tk.Button(frm_B2, width=10, text="Move Right", command=move_right)
+btn_moveUp = tk.Button(frm_B2, width=10, text="Move Up", command=move_up)
+btn_moveDown = tk.Button(frm_B2, width=10, text="Move Down", command=move_down)
+
+
 btn_rotateCW.pack(side=tk.LEFT)
 btn_rotateCCW.pack(side=tk.LEFT, after=btn_rotateCW)
 btn_zoomIn.pack(side=tk.LEFT, after=btn_rotateCCW)
@@ -513,7 +568,7 @@ btn_moveLeft.pack(side=tk.RIGHT, after=btn_moveRight)
 btn_moveDown.pack(side=tk.RIGHT, after=btn_moveLeft)
 btn_moveUp.pack(side=tk.RIGHT, after=btn_moveDown)
 
-frm_B.pack(side=tk.TOP, fill="x")
+frm_B2.pack(side=tk.TOP, fill="x",expand=True)
 
 # frame C
 
@@ -536,22 +591,6 @@ lbl_potImage1.pack(side=tk.LEFT)
 lbl_potImage2.pack(side=tk.LEFT, after=lbl_potImage1)
 lbl_potImage3.pack(side=tk.LEFT, after=lbl_potImage2)
 
-frm_C1.pack(side=tk.TOP)
-
-
-frm_C2 = tk.Frame(window)
-
-# lbl_potImage4 = tk.Label(frm_C2)
-# lbl_potImage5 = tk.Label(frm_C2)
-# lbl_potImage6 = tk.Label(frm_C2)
-
-# lbl_potImage4.config(image=imagePot_display)
-# lbl_potImage5.config(image=imagePot_display)
-# lbl_potImage6.config(image=imagePot_display)
-
-# lbl_potImage4.pack(side=tk.LEFT)
-# lbl_potImage5.pack(side=tk.LEFT, after=lbl_potImage4)
-# lbl_potImage6.pack(side=tk.LEFT, after=lbl_potImage5)
 
 showPots = tk.StringVar()
 
@@ -560,17 +599,17 @@ showOption = {
     "lower pots": "lower"
 }
 
-lbl_kernelSize = tk.Label(frm_C2, text="show pots:")
+lbl_showPots = tk.Label(frm_C1, text="show pots:")
 
-lbl_kernelSize.pack(side=tk.LEFT)
+lbl_showPots.pack(side=tk.LEFT, anchor=tk.NW)
 
 for (text, value) in showOption.items():
-    tk.Radiobutton(frm_C2, text=text, variable=showPots, value=value, command=switch_display).pack(side=tk.LEFT)
+    tk.Radiobutton(frm_C1, text=text, variable=showPots, value=value, command=switch_display).pack(side=tk.TOP)
 
 # select the default kernel size 3x3
 showPots.set("upper")
 
-frm_C2.pack(side=tk.TOP)
+frm_C1.pack(side=tk.TOP, fill="x")
 
 # frame D
 
