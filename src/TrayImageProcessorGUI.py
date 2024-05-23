@@ -190,11 +190,15 @@ def zoom_out():
 
 def update_parameters():
     global textPar
+    global ROTATION_ANGLE
+    global ZOOM_FACTOR
+    global offSetX
+    global offSetY
     textPar = (
     f"Rotation Angle:\n{ROTATION_ANGLE} Grad\n"
-    f"Zoom Factor:\n{ZOOM_FACTOR*1.6:.2f}pix/mm\n"
-    f"Offset X:\n{ZOOM_FACTOR*1.6*offSetX:.0f}mm\n"
-    f"Offset Y:\n{ZOOM_FACTOR*1.6*offSetY:.0f}mm"
+    f"Zoom Factor:\n{ZOOM_FACTOR*1.6:.2f} pix/mm\n"
+    f"Offset X:\n{ZOOM_FACTOR*1.6*offSetX:.0f} mm\n"
+    f"Offset Y:\n{ZOOM_FACTOR*1.6*offSetY:.0f} mm"
     )
     msg_par.config(text=textPar)
 
