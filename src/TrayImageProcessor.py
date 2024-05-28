@@ -1,3 +1,4 @@
+import random
 # This script is used to generate random watering points for the farmbot tray.
 
 # Import the required libraries
@@ -291,11 +292,13 @@ class TrayImageProcessor:
         mask_with_saftyzone = cv2.dilate(mask_cop, np.ones((15,15), np.uint8), iterations=3)
         watering_points_list = []
         count = 0
-        list_angle = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340]
-        list_rel_radius = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        #list_angle = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340]
+        #list_rel_radius = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
         while (count<=num_watering_points):
-            angel = choice(list_angle)
-            rel_radius = choice(list_rel_radius)
+            angel = random.randint(0,360)
+            rel_radius = random.uniform(0.1,1.0)
+            #angel = choice(list_angle)
+            #rel_radius = choice(list_rel_radius)
             x_watering_point = (int)(np.cos(np.radians(angel))*(roi_radius)*rel_radius+pot_x)
             y_watering_point = (int)(np.sin(np.radians(angel))*(roi_radius)*rel_radius+pot_y)
             if mask_with_saftyzone[y_watering_point, x_watering_point] != 255:
