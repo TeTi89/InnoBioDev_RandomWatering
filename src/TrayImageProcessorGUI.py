@@ -39,7 +39,7 @@ def open_file():
     if not file_path.lower().endswith((".png", ".jpg", ".jpeg", ".bmp")):
         # show a warning message in a popup window if the file is not a valid image file
         warnings.warn(f"Invalid image file {file_path}")
-        messagebox.showwarning("Invalid Image File", f"Invalid image file {file_path}")
+        tk.messagebox.showwarning("Invalid Image File", f"Invalid image file {file_path}")
         return
     else:
         ent_path.delete(0, tk.END)
@@ -123,10 +123,14 @@ def display_pot_images(image):
     return
 
 def load_and_display_image():
+    global IfLoad
     load_image()
-    display_image(IMAGE)
-    display_pot_images(IMAGE)
-    update_parameters()
+    if not IfLoad:
+        return
+    else:
+        display_image(IMAGE)
+        display_pot_images(IMAGE)
+        update_parameters()
 
 def rotate_image(image):
     global ROTATION_ANGLE
