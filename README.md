@@ -1,4 +1,4 @@
-# InnoBioDev_RandomWatering
+# RandomWatering
 ## Table of Content
 [roadmap](#roadmap)  
 [TODO](#todo)  
